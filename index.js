@@ -21,6 +21,13 @@ async function run() {
     await client.connect();
     const inventoryCollection = client.db('products').collection('inventory');
 
+    // INSERT
+    app.post('/addInventory', async (req, res) => {
+      const item = req.body;
+      const result = await inventoryCollection.insertOne(item);
+      res.send(result);
+    });
+
     //GET ALL INVENTORY
     app.get('/inventorys', async (req, res) => {
       const query = {};
