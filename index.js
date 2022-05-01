@@ -35,9 +35,27 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await inventoryCollection.findOne(query);
       res.send(result);
-      console.log(id);
     });
-    
+
+    // INCREASE QUANTITY !
+    app.post('/inventoryDelevered/:id', async (req, res) => {
+      const id = req.params.id;
+      const amount = req.body.quantity;
+      const query = { _id: ObjectId(id) };
+      const inventory = await inventoryCollection.findOne(query);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          quantity: +inventory.quantity + amount ?? 1,
+        },
+      };
+      const result = await inventoryCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
   } finally {
   }
 }
