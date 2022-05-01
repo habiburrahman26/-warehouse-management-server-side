@@ -21,6 +21,14 @@ async function run() {
     await client.connect();
     const inventoryCollection = client.db('products').collection('inventory');
 
+    //GET ALL INVENTORY
+    app.get('/inventorys', async (req, res) => {
+      const query = {};
+      const cursor = inventoryCollection.find(query);
+      const inventorys = await cursor.toArray();
+      res.send(inventorys);
+    });
+
     //GET INVENTORY
     app.get('/inventory', async (req, res) => {
       const query = {};
@@ -38,7 +46,7 @@ async function run() {
     });
 
     // INCREASE QUANTITY !
-    app.post('/inventoryDelevered/:id', async (req, res) => {
+    app.post('/inventoryRestore/:id', async (req, res) => {
       const id = req.params.id;
       const amount = req.body.quantity;
       const query = { _id: ObjectId(id) };
@@ -46,7 +54,7 @@ async function run() {
       const options = { upsert: true };
       const updateDoc = {
         $set: {
-          quantity: +inventory.quantity + amount ?? 1,
+          quantity: +inventory.quantity + amount,
         },
       };
       const result = await inventoryCollection.updateOne(
@@ -56,7 +64,37 @@ async function run() {
       );
       res.send(result);
     });
+
+    // DECREASE QUANTITY !
+    app.post('/inventoryDelevered/:id', async (req, res) => {
+      const id = req.params.id;
+      const amount = req.body.quantity;
+      const query = { _id: ObjectId(id) };
+      const inventory = await inventoryCollection.findOne(query);
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          quantity: +inventory.quantity >= 1 ? +inventory.quantity - amount : 0,
+        },
+      };
+      const result = await inventoryCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // DELETE
+    app.delete('/delete/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await inventoryCollection.deleteOne(query);
+      res.send(result);
+    });
   } finally {
+    // await client.close()
   }
 }
 run().catch(console.dir);
