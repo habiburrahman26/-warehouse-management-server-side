@@ -100,6 +100,15 @@ async function run() {
       const result = await inventoryCollection.deleteOne(query);
       res.send(result);
     });
+
+    // FIND ITEM BY EMAIL
+    app.get('/myItem', async (req, res) => {
+      const email = req.query.email;
+      const query = { email };
+      const cursor = inventoryCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
   } finally {
     // await client.close()
   }
