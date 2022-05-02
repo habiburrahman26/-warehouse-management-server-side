@@ -21,11 +21,12 @@ const client = new MongoClient(uri, {
 const verifyToken = (req, res, next) => {
   const authToken = req.headers.authorization;
   if (!authToken) {
-    res.status(401).send({ msg: 'Unauthorization access' });
+    return res.status(401).send({ msg: 'Unauthorization access' });
   } else {
     const token = authToken.split(' ')[1];
     jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, function (err, decoded) {
       if (err) {
+        return res.status(403).send({ message: 'Forbidden access' });
       } else {
         req.decoded = decoded;
         next();
