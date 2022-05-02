@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongodb = require('module');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -20,6 +21,15 @@ async function run() {
   try {
     await client.connect();
     const inventoryCollection = client.db('products').collection('inventory');
+
+    // access token generate
+    app.post('/token', async (req, res) => {
+      const email = req.body;
+      const token = jwt.sign(email, process.env.SECRET_ACCESS_TOKEN, {
+        expiresIn: '1d',
+      });
+      res.send({token});
+    });
 
     // INSERT
     app.post('/addInventory', async (req, res) => {
