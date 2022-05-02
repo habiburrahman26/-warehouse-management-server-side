@@ -17,6 +17,23 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// VERIFY TOKEN
+const verifyToken = (req, res, next) => {
+  const authToken = req.headers.authorization;
+  if (!authToken) {
+    res.status(401).send({ msg: 'Unauthorization access' });
+  } else {
+    const token = authToken.split(' ')[1];
+    jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, function (err, decoded) {
+      if (err) {
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    });
+  }
+};
+
 async function run() {
   try {
     await client.connect();
@@ -28,7 +45,7 @@ async function run() {
       const token = jwt.sign(email, process.env.SECRET_ACCESS_TOKEN, {
         expiresIn: '1d',
       });
-      res.send({token});
+      res.send({ token });
     });
 
     // INSERT
@@ -112,12 +129,17 @@ async function run() {
     });
 
     // FIND ITEM BY EMAIL
-    app.get('/myItem', async (req, res) => {
+    app.get('/myItem', verifyToken, async (req, res) => {
+      const tokenEmail = req.decoded.email;
       const email = req.query.email;
-      const query = { email };
-      const cursor = inventoryCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
+      if (tokenEmail === email) {
+        const query = { email };
+        const cursor = inventoryCollection.find(query);
+        const result = await cursor.toArray();
+        res.send(result);
+      } else {
+        return res.status(403).send({ message: 'Forbidden access' });
+      }
     });
   } finally {
     // await client.close()
