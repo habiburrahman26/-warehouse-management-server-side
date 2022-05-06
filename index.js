@@ -58,9 +58,10 @@ async function run() {
 
     //GET ALL INVENTORY
     app.get('/inventorys', async (req, res) => {
+      const page = +req.query.page;
       const query = {};
       const cursor = inventoryCollection.find(query);
-      const inventorys = await cursor.toArray();
+      const inventorys = await cursor.skip(page*10).limit(10).toArray();
       res.send(inventorys);
     });
 
@@ -141,6 +142,12 @@ async function run() {
       } else {
         return res.status(403).send({ message: 'Forbidden access' });
       }
+    });
+
+    // PAGE COUNT
+    app.get('/pageCount', async (req, res) => {
+      const count = await inventoryCollection.estimatedDocumentCount();
+      res.send({ count });
     });
   } finally {
     // await client.close()
